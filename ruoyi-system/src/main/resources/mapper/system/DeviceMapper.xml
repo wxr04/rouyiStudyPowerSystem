@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.DeviceMapper">
+
+    <resultMap type="Device" id="DeviceResult">
+        <result property="devId"    column="dev_id"    />
+        <result property="devName"    column="dev_name"    />
+        <result property="devGnum"    column="dev_GNum"    />
+        <result property="status"    column="status"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="deptId"    column="dept_id"    />
+        <result property="devCom"    column="dev_com"    />
+        <result property="devAddr"    column="dev_addr"    />
+        <result property="Pt"    column="Pt"    />
+        <result property="Ct"    column="Ct"    />
+        <result property="Epp"    column="Epp"    />
+        <result property="Ua"    column="Ua"    />
+        <result property="Ub"    column="Ub"    />
+        <result property="Uc"    column="Uc"    />
+        <result property="Ia"    column="Ia"    />
+        <result property="Ib"    column="Ib"    />
+        <result property="Ic"    column="Ic"    />
+        <result property="P"    column="P"    />
+        <result property="cosQ"    column="cosQ"    />
+        <result property="F"    column="F"    />
+        <association property="dept"    column="dept_id" javaType="SysDept" resultMap="deptResult" />
+    </resultMap>
+    <resultMap id="deptResult" type="SysDept">
+        <id     property="deptId"    column="dept_id"     />
+        <result property="parentId"  column="parent_id"   />
+        <result property="deptName"  column="dept_name"   />
+        <result property="ancestors" column="ancestors"   />
+        <result property="orderNum"  column="order_num"   />
+        <result property="leader"    column="leader"      />
+        <result property="status"    column="dept_status" />
+    </resultMap>
+    <sql id="selectDeviceVo">
+        select d.dev_id, d.dev_name, d.dev_GNum, d.status, d.update_time, sd.dept_name,d.dept_id, d.dev_com, d.dev_addr,
+         d.Pt, d.Ct, d.Epp, d.Ua, d.Ub, d.Uc, d.Ia, d.Ib, d.Ic, d.P, d.cosQ, d.F
+         from device d
+         left join sys_dept sd on d.dept_id = sd.dept_id
+
+    </sql>
+
+    <select id="selectDeviceList" parameterType="Device" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/>
+        <where>
+            <if test="devName != null  and devName != ''"> and dev_name like concat('%', #{devName}, '%')</if>
+            <if test="devGnum != null  and devGnum != ''"> and dev_GNum = #{devGnum}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="deptId != null "> and d.dept_id = #{deptId}</if>
+            <if test="devCom != null "> and dev_com = #{devCom}</if>
+            <if test="devAddr != null "> and dev_addr = #{devAddr}</if>
+            <if test="Pt != null "> and Pt = #{Pt}</if>
+            <if test="Ct != null "> and Ct = #{Ct}</if>
+            <if test="Epp != null "> and Epp = #{Epp}</if>
+            <if test="Ua != null "> and Ua = #{Ua}</if>
+            <if test="Ub != null "> and Ub = #{Ub}</if>
+            <if test="Uc != null "> and Uc = #{Uc}</if>
+            <if test="Ia != null "> and Ia = #{Ia}</if>
+            <if test="Ib != null "> and Ib = #{Ib}</if>
+            <if test="Ic != null "> and Ic = #{Ic}</if>
+            <if test="P != null "> and P = #{P}</if>
+            <if test="cosQ != null "> and cosQ = #{cosQ}</if>
+            <if test="F != null "> and F = #{F}</if>
+        </where>
+    </select>
+
+    <select id="selectDeviceByDevId" parameterType="Long" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/>
+        where dev_id = #{devId}
+    </select>
+
+    <insert id="insertDevice" parameterType="Device" useGeneratedKeys="true" keyProperty="devId">
+        insert into device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="devName != null and devName != ''">dev_name,</if>
+            <if test="devGnum != null and devGnum != ''">dev_GNum,</if>
+            <if test="status != null">status,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="devCom != null">dev_com,</if>
+            <if test="devAddr != null">dev_addr,</if>
+            <if test="Pt != null">Pt,</if>
+            <if test="Ct != null">Ct,</if>
+            <if test="Epp != null">Epp,</if>
+            <if test="Ua != null">Ua,</if>
+            <if test="Ub != null">Ub,</if>
+            <if test="Uc != null">Uc,</if>
+            <if test="Ia != null">Ia,</if>
+            <if test="Ib != null">Ib,</if>
+            <if test="Ic != null">Ic,</if>
+            <if test="P != null">P,</if>
+            <if test="cosQ != null">cosQ,</if>
+            <if test="F != null">F,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="devName != null and devName != ''">#{devName},</if>
+            <if test="devGnum != null and devGnum != ''">#{devGnum},</if>
+            <if test="status != null">#{status},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="devCom != null">#{devCom},</if>
+            <if test="devAddr != null">#{devAddr},</if>
+            <if test="Pt != null">#{Pt},</if>
+            <if test="Ct != null">#{Ct},</if>
+            <if test="Epp != null">#{Epp},</if>
+            <if test="Ua != null">#{Ua},</if>
+            <if test="Ub != null">#{Ub},</if>
+            <if test="Uc != null">#{Uc},</if>
+            <if test="Ia != null">#{Ia},</if>
+            <if test="Ib != null">#{Ib},</if>
+            <if test="Ic != null">#{Ic},</if>
+            <if test="P != null">#{P},</if>
+            <if test="cosQ != null">#{cosQ},</if>
+            <if test="F != null">#{F},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDevice" parameterType="Device">
+        update device
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="devName != null and devName != ''">dev_name = #{devName},</if>
+            <if test="devGnum != null and devGnum != ''">dev_GNum = #{devGnum},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            <if test="devCom != null">dev_com = #{devCom},</if>
+            <if test="devAddr != null">dev_addr = #{devAddr},</if>
+            <if test="Pt != null">Pt = #{Pt},</if>
+            <if test="Ct != null">Ct = #{Ct},</if>
+            <if test="Epp != null">Epp = #{Epp},</if>
+            <if test="Ua != null">Ua = #{Ua},</if>
+            <if test="Ub != null">Ub = #{Ub},</if>
+            <if test="Uc != null">Uc = #{Uc},</if>
+            <if test="Ia != null">Ia = #{Ia},</if>
+            <if test="Ib != null">Ib = #{Ib},</if>
+            <if test="Ic != null">Ic = #{Ic},</if>
+            <if test="P != null">P = #{P},</if>
+            <if test="cosQ != null">cosQ = #{cosQ},</if>
+            <if test="F != null">F = #{F},</if>
+        </trim>
+        where dev_id = #{devId}
+    </update>
+
+    <delete id="deleteDeviceByDevId" parameterType="Long">
+        delete from device where dev_id = #{devId}
+    </delete>
+
+    <delete id="deleteDeviceByDevIds" parameterType="String">
+        delete from device where dev_id in
+        <foreach item="devId" collection="array" open="(" separator="," close=")">
+            #{devId}
+        </foreach>
+    </delete>
+</mapper>
