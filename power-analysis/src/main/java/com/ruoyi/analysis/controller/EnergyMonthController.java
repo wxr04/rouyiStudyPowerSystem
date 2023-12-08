@@ -42,9 +42,18 @@ public class EnergyMonthController extends BaseController
 {
     @Autowired
     private IEnergyMonthService energyMonthService;
-     /*
-     *获取devtree内容
-     * */
+    /**
+     * 查询powerEnergy analysis in month列表
+     */
+    @PreAuthorize("@ss.hasPermi('analysis:energyMonth:compare')")
+    @GetMapping("/compare")
+    public TableDataInfo compareEnergyMonth(EnergyMonth energyMonth)
+    {
+
+
+        List<EnergyAnalysis> list = energyMonthService.selectEnergyMonthList(energyMonth);
+ return getDataTable(list);
+    }
 
     /**
      * 查询powerEnergy analysis in month列表

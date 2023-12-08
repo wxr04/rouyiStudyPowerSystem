@@ -12,22 +12,7 @@
         >
         </el-date-picker >
       </el-form-item>
-      <el-form-item label="区域" prop="deptId">
-        <el-select
-          v-model="queryParams.deptId"
-          placeholder="请输入设备所在的区域"
-          size="mini"
-          @change="changeArea"
-        >
-          <el-option
-            v-for="area1 in areaList"
-            :value="area1.deptId"
-            :label="area1.deptName"
-            :key="area1.deptId"
-          >
-          </el-option>
-        </el-select>
-      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -36,10 +21,41 @@
 
 
     <el-row>
+      <el-col :span="4" :xs="24">
+      <el-tree
+        :data="devTree"
+        show-checkbox
+        node-key="id"
+        ref="tree"
+        :default-expanded-keys="[2, 3]"
+        :default-checked-keys="[5]">
+      </el-tree>
+        <div class="buttons">
+          <el-button @click="getCheckedNodes">通过 node 获取</el-button>
+          <el-button @click="getCheckedKeys">通过 key 获取</el-button>
 
-     <!-- <el-col :span="18" >-->
+          <el-button @click="resetChecked">清空</el-button>
+        </div>
+
+      </el-col>
+      <el-col :span="18" >
         <el-row :gutter="10" class="mb8">
+          <!--部门数据-->
+          <el-col :span="4" :xs="24">
+            <!-- <div class="head-container">
+               <el-input
+                 v-model="deptName"
+                 placeholder="请输入部门名称"
+                 clearable
+                 size="small"
+                 prefix-icon="el-icon-search"
+                 style="margin-bottom: 20px"
+               />
+             </div>-->
+            <div class="head-container">
 
+            </div>
+          </el-col>
 
 
           <el-col :span="1.5">
@@ -54,29 +70,37 @@
           </el-col>
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
         </el-row>
-    <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
-     <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
-      <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
+        <el-row>
+          <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
+            <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
+            <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
 
-      </el-table-column>
-         <el-table-column align="center" v-for="(item,i) in this.dFiledList" :label="item">
-            <template slot-scope="scope">
-              {{formatDataMethod(scope.row.energyData,i)}}
-            </template>
-         </el-table-column>
-      <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+            </el-table-column>
+            <el-table-column align="center" v-for="(item,i) in this.dFiledList" :label="item">
+              <template slot-scope="scope">
+                {{formatDataMethod(scope.row.energyData,i)}}
+              </template>
+            </el-table-column>
+            <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
 
-      </el-table-column>
-    </el-table>
-    <!--  </el-col>-->
+            </el-table-column>
+          </el-table>
+        </el-row>
+        <el-row >
+          <!--图表-->
+          <div ref="energyChart" style="height:500px;padding:0"></div>
+
+        </el-row>
+     <!--<pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />-->
+      </el-col>
     </el-row>
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+
 
     <!-- 添加或修改powerEnergy analysis in month对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
@@ -91,9 +115,9 @@
 </template>
 
 <script>
-import { listEnergyMonth, getEnergyMonth, delEnergyMonth, addEnergyMonth, updateEnergyMonth } from "@/api/analysis/energyMonth";
+import { compareEnergyMonth, getEnergyMonth, delEnergyMonth, addEnergyMonth, updateEnergyMonth } from "@/api/analysis/energyMonth";
 import {listDevTree,listDept } from "@/api/system/dept";
-
+import * as echarts from 'echarts';
 export default {
   name: "EnergyMonth",
   data() {
@@ -135,10 +159,16 @@ export default {
 
         }
         },
+      // 图表集合
+      chart: null,
       //区域列表数据
       areaList: [],
       //动态列表
       dFiledList:[],
+      //echarts x坐标
+      echartsX:[],
+      //选择月的最大天数
+      selectMonMaxDays:30,
       //设备树
       // 部门树选项
       devTree: undefined,
@@ -228,16 +258,35 @@ export default {
     //this.getList();
     var date=new Date();
    // this.queryParams.collectTime=(date.getTime());
-    this.getAreaList();
-   // this.getDevTree();
+    this.getMonthMaxDays(date);
+   // this.getAreaList();
+    this.getDevTree();
     this.getDymaticFieldList();
+
+
   },
   mounted() {
     this.queryParams.collectTime=this.parseTime(new Date().getTime());
+    this.initalEchart();
   },
   methods: {
-
-
+/*初始化echarts*/
+   initalEchart(){
+   this.chart=echarts.init(this.$refs.energyChart,'macarons');
+     this.chart.setOption({
+       title: { text: '在Vue中使用echarts' },
+       tooltip: {},
+       xAxis: {
+         data: this.echartsX
+       },
+       yAxis: {},
+       series: [{
+         name: '销量',
+         type: 'bar',
+         data: [5, 20, 36, 10, 10, 20]
+       }]
+     });
+},
     /*
     * 当区域内容不为空时，清除rules
     * */
@@ -263,6 +312,10 @@ export default {
         console.log('this department is:'+this.areaList[0].deptId);
       });
     },
+    //获取每月最大天数
+    getMonthMaxDays(dateTime){
+      this.selectMonMaxDays=(new Date(dateTime.getFullYear(),(dateTime.getMonth()+1),0)).getDate();
+    },
     //查看日电能数据
     formatDataMethod(columnArray,dayId){
       if(dayId<=columnArray.length)
@@ -270,15 +323,54 @@ export default {
     },
     //动态表头的生成
     getDymaticFieldList(){
-      for(let i=0;i<31;i++){
+      console.log("this selectMonMaxdays is:"+this.selectMonMaxDays);
+      for(let i=0;i<this.selectMonMaxDays;i++){
         this.dFiledList[i]=(i+1)+"日";
+        if((i+1)%3==1)
+          this.echartsX[i]=(i+1)+"日";
+        else
+          this.echartsX[i]="";
       }
-      console.log(this.dFiledList);
+      //console.log(this.dFiledList);
+    },
+    //根据获取的电能报表设置柱状图
+    resetEcharts(energyMonthList){
+      let listLength=energyMonthList.length;
+      let routeNameList=[];
+      let series=[];
+      let option;
+
+      if(listLength>0){
+        if(listLength>8)
+          listLength=8;
+        for(let i=0;i<listLength;i++){
+           series[i].name=energyMonthList[i].devName;
+           series[i].type="bar";
+           series[i].data=energyMonthList[i].energyData;
+        }
+        //x坐标
+        routeNameList=this.dFiledList;
+        let option={
+
+          xAxis: {
+            data: routeNameList
+          },
+          yAxis: {},
+          series: series
+        }
+        this.chart=echarts.init(this.$refs.energyChart,'macarons');
+        this.chart.setOption(option);
+      }
     },
     /*获取yyyy-mm格式时间*/
     getTime(data){
-      this.queryParams.collectTime=data;
-      console.log(this.queryParams.collectTime);
+      let selectTime=new Date(data);
+
+      //获取选择月的最大天数
+      this.getMonthMaxDays(selectTime);
+      console.log(this.selectMonMaxDays);
+      //this.queryParams.collectTime=data;
+
     },
     /*获取设备树内容*/
     getDevTree(){
@@ -287,22 +379,44 @@ export default {
        console.log("this is devTree:"+this.devTree);
      });
     },
-
+    /*el-tree*/
+    getCheckedNodes() {
+      console.log(this.$refs.tree.getCheckedNodes());
+    },
+    getCheckedKeys() {
+      console.log(this.$refs.tree.getCheckedKeys());
+    },
+    resetChecked() {
+      this.$refs.tree.setCheckedKeys([]);
+    },
     /** 查询powerEnergy analysis in month列表 */
     getList() {
-
+      let selectDevs=this.$refs.tree.getCheckedKeys();
 
       this.loading = true;
-     // let searchParams=this.setParams(this.queryParams,selectDevs);
-      listEnergyMonth(this.queryParams).then(response => {
+      if(selectDevs.length===0){
+        alert("请选择设备");
+        return;
+      }
+      let searchParams=this.setParams(this.queryParams,selectDevs);
+      compareEnergyMonth(searchParams).then(response => {
         this.energyMonthList = response.rows;
         this.total = response.total;
+        this.resetEcharts(this.energyMonthList);
         this.loading = false;
-
+        console.log("this.total is :"+this.total);
       });
     },
+    //获取查询的时间，还有选择的设备
+    setParams(params,selectDevs){
 
+      let search=params;
+      search.params = typeof (search.params) === 'object' && search.params !== null && !Array.isArray(search.params) ? search.params : {};
+      selectDevs=JSON.stringify(Array.isArray(selectDevs)? selectDevs:[]);
+      search.params['devIds']=selectDevs;
 
+      return search;
+    },
     // 取消按钮
     cancel() {
       this.open = false;

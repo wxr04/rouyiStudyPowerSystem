@@ -6,6 +6,14 @@ return request({
 })
 }
 // 查询powerEnergy analysis in month列表
+export function compareEnergyMonth(query) {
+  return request({
+    url: '/analysis/energyMonth/compare',
+    method: 'get',
+    params: query
+  })
+}
+// 查询powerEnergy analysis in month列表
 export function listEnergyMonth(query) {
   return request({
     url: '/analysis/energyMonth/list',
