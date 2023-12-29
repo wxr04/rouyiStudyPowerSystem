@@ -10,7 +10,11 @@ import com.ruoyi.common.core.domain.entity.Device;
  * @date 2023-10-19
  */
 public interface IDeviceService
-{
+{/*
+ * 根据区域号获取所属设备
+ * */
+
+    public List<Device> getDevicesByDepartId(Long departId);
     /**
      * 查询电力监控
      *

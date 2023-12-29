@@ -11,6 +11,7 @@ import com.ruoyi.analysis.domain.EnergyAnalysis;
 import com.ruoyi.common.core.domain.entity.Device;
 import com.ruoyi.common.utils.easyExecl.DynamicExcelData;
 import com.ruoyi.common.utils.easyExecl.EasyExcelUtil;
+import com.ruoyi.system.service.IDeviceService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,6 +43,8 @@ public class EnergyMonthController extends BaseController
 {
     @Autowired
     private IEnergyMonthService energyMonthService;
+    @Autowired
+    private IDeviceService deviceService;
     /**
      * 查询powerEnergy analysis in month列表
      */
@@ -65,7 +68,8 @@ public class EnergyMonthController extends BaseController
 
          startPage();
          //根据区域号，获取设备
-         List<Device> deviceList=energyMonthService.getDevicesByDepartId(energyMonth);
+        Long departId=energyMonth.getDeptId();
+         List<Device> deviceList=deviceService.getDevicesByDepartId(departId);
         //System.out.println(energyMonth.getCollectTime());
 
         List<EnergyAnalysis> list = energyMonthService.selectEnergyMonthListByDepId(energyMonth,deviceList);
@@ -83,7 +87,7 @@ public class EnergyMonthController extends BaseController
     public void export(HttpServletResponse response, EnergyMonth energyMonth)
     {
         //根据区域号，获取设备
-        List<Device> deviceList=energyMonthService.getDevicesByDepartId(energyMonth);
+        List<Device> deviceList=deviceService.getDevicesByDepartId(energyMonth.getDeptId());
         List<EnergyAnalysis> list =energyMonthService.selectEnergyMonthListByDepId(energyMonth,deviceList);
         List<Map<String, Object>> dataList=energyMonthService.controlMonthData(list);
         LinkedHashMap<String, DynamicExcelData> headNameMap=new LinkedHashMap<>();

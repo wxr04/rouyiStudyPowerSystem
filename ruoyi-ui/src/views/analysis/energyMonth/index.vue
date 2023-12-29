@@ -35,49 +35,93 @@
     </el-form>
 
 
-    <el-row>
 
-     <!-- <el-col :span="18" >-->
-        <el-row :gutter="10" class="mb8">
+    <el-tabs  tab-position="left" @tab-click="tabClick" v-model="tabName">
+      <el-tab-pane label="月报表" name="月报表">
+        <el-row>
 
+          <!-- <el-col :span="18" >-->
+          <el-row :gutter="10" class="mb8">
 
+            <el-col :span="1.5">
+              <el-button
+                type="warning"
+                plain
+                icon="el-icon-download"
+                size="mini"
+                @click="handleExport"
+                v-hasPermi="['analysis:energyMonth:export']"
+              >导出</el-button>
+            </el-col>
+            <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+          </el-row>
+          <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
+            <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
+            <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
 
-          <el-col :span="1.5">
-            <el-button
-              type="warning"
-              plain
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-              v-hasPermi="['analysis:energyMonth:export']"
-            >导出</el-button>
-          </el-col>
-          <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+            </el-table-column>
+            <el-table-column align="center" v-for="(item,i) in this.dFiledListMonth" :label="item">
+              <template slot-scope="scope">
+                {{formatDataMethod(scope.row.energyData,i)}}
+              </template>
+            </el-table-column>
+            <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+
+            </el-table-column>
+          </el-table>
+          <!--  </el-col>-->
         </el-row>
-    <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
-     <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
-      <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
+        <pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
+      </el-tab-pane>
+      <el-tab-pane label="年报表" name="年报表">
+        <el-row>
 
-      </el-table-column>
-         <el-table-column align="center" v-for="(item,i) in this.dFiledList" :label="item">
-            <template slot-scope="scope">
-              {{formatDataMethod(scope.row.energyData,i)}}
-            </template>
-         </el-table-column>
-      <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+          <!-- <el-col :span="18" >-->
+          <el-row :gutter="10" class="mb8">
 
-      </el-table-column>
-    </el-table>
-    <!--  </el-col>-->
-    </el-row>
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+            <el-col :span="1.5">
+              <el-button
+                type="warning"
+                plain
+                icon="el-icon-download"
+                size="mini"
+                @click="handleExport"
+                v-hasPermi="['analysis:energyYear:export']"
+              >导出</el-button>
+            </el-col>
+            <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+          </el-row>
+          <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
+            <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
+            <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
 
+            </el-table-column>
+            <el-table-column align="center" v-for="(item,i) in this.dFiledListYear" :label="item">
+              <template slot-scope="scope">
+                {{formatDataMethod(scope.row.energyData,i)}}
+              </template>
+            </el-table-column>
+            <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+
+            </el-table-column>
+          </el-table>
+          <!--  </el-col>-->
+        </el-row>
+        <pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
+      </el-tab-pane>
+    </el-tabs>
     <!-- 添加或修改powerEnergy analysis in month对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
@@ -93,6 +137,7 @@
 <script>
 import { listEnergyMonth, getEnergyMonth, delEnergyMonth, addEnergyMonth, updateEnergyMonth } from "@/api/analysis/energyMonth";
 import {listDevTree,listDept } from "@/api/system/dept";
+import {listEnergyYear} from  "@/api/analysis/energyYear"
 
 export default {
   name: "EnergyMonth",
@@ -138,43 +183,12 @@ export default {
       //区域列表数据
       areaList: [],
       //动态列表
-      dFiledList:[],
+      dFiledListMonth:[],
+      dFiledListYear:[],
       //设备树
       // 部门树选项
       devTree: undefined,
-      //树形菜单
-      data: [{
-        id: 11,
-        label: '一级 2',
-        children: [{
-          id: 13,
-          label: '二级 2-1',
-          children: [{
-            id: 4,
-            label: '三级 3-1-1'
-          }, {
-            id: 5,
-            label: '三级 3-1-2',
-            disabled: true
-          }]
-        }, {
-          id: 2,
-          label: '二级 2-2',
-          disabled: true,
-          children: [{
-            id: 6,
-            label: '三级 3-2-1'
-          }, {
-            id: 7,
-            label: '三级 3-2-2',
-            disabled: true
-          }]
-        }]
-      }],
-      defaultProps: {
-        children: 'children',
-        label: 'label'
-      },
+
       // 遮罩层
       loading: true,
       // 选中数组
@@ -194,7 +208,7 @@ export default {
       // 是否显示弹出层
       open: false,
       // 查询参数
-
+      tabName:'月报表',
       queryParams: {
         deptId:"",
         pageNum: 1,
@@ -236,7 +250,17 @@ export default {
     this.queryParams.collectTime=this.parseTime(new Date().getTime());
   },
   methods: {
-
+    /*
+    * 当切换月电能表和年电能表切换时，更改表头
+    * */
+    tabClick(){
+      if(this.tabName==="月报表"){
+        console.log("this is 月报表");
+      }
+      else {
+        console.log("this is 年报表");
+      }
+    },
 
     /*
     * 当区域内容不为空时，清除rules
@@ -271,9 +295,12 @@ export default {
     //动态表头的生成
     getDymaticFieldList(){
       for(let i=0;i<31;i++){
-        this.dFiledList[i]=(i+1)+"日";
+        this.dFiledListMonth[i]=(i+1)+"日";
       }
-      console.log(this.dFiledList);
+      for(let i=0;i<12;i++){
+        this.dFiledListYear[i]=(i+1)+"月";
+      }
+
     },
     /*获取yyyy-mm格式时间*/
     getTime(data){
@@ -294,12 +321,23 @@ export default {
 
       this.loading = true;
      // let searchParams=this.setParams(this.queryParams,selectDevs);
-      listEnergyMonth(this.queryParams).then(response => {
-        this.energyMonthList = response.rows;
-        this.total = response.total;
-        this.loading = false;
+      if(this.tabName=="月报表"){
+        listEnergyMonth(this.queryParams).then(response => {
+          this.energyMonthList = response.rows;
+          this.total = response.total;
+          this.loading = false;
 
-      });
+        });
+      }
+      else {//年报表
+        listEnergyYear(this.queryParams).then(response => {
+          this.energyMonthList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+
+        });
+      }
+
     },
 
 
@@ -315,8 +353,10 @@ export default {
         devId: null,
         epp2: null,
         collectTime: null
+
       };
       this.resetForm("form");
+      this.ids=[];
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -392,9 +432,17 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('analysis/energyMonth/export', {
-        ...this.queryParams
-      }, `月电能报表_${new Date().getTime()}.xlsx`)
+      if(this.tabname=="月报表"){
+        this.download('analysis/energyMonth/export', {
+          ...this.queryParams
+        }, `月电能报表_${new Date().getTime()}.xlsx`)
+      }
+      else {
+        this.download('analysis/energyYear/export', {
+          ...this.queryParams
+        }, `年电能报表_${new Date().getTime()}.xlsx`)
+      }
+
      // }, `月电能报表_${this.queryParams.collectTime}.xlsx`)
     }
   }

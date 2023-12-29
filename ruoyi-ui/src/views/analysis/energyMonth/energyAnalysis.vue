@@ -30,74 +30,89 @@
         :default-expanded-keys="[2, 3]"
         :default-checked-keys="[5]">
       </el-tree>
-        <div class="buttons">
+        <!--<div class="buttons">
           <el-button @click="getCheckedNodes">通过 node 获取</el-button>
           <el-button @click="getCheckedKeys">通过 key 获取</el-button>
 
           <el-button @click="resetChecked">清空</el-button>
-        </div>
+        </div>-->
 
       </el-col>
-      <el-col :span="18" >
-        <el-row :gutter="10" class="mb8">
-          <!--部门数据-->
-          <el-col :span="4" :xs="24">
-            <!-- <div class="head-container">
-               <el-input
-                 v-model="deptName"
-                 placeholder="请输入部门名称"
-                 clearable
-                 size="small"
-                 prefix-icon="el-icon-search"
-                 style="margin-bottom: 20px"
-               />
-             </div>-->
-            <div class="head-container">
+      <el-col :span="20" >
+        <el-tabs  tab-position="left" @tab-click="tabClick" v-model="tabName">
+          <el-tab-pane label="月分析" name="月分析">
+            <el-row :gutter="10" class="mb8">
 
-            </div>
-          </el-col>
+              <el-col :span="1.5">
+                <el-button
+                  type="warning"
+                  plain
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  v-hasPermi="['analysis:energyMonth:export']"
+                >导出</el-button>
+              </el-col>
+              <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+            </el-row>
+            <el-row>
+              <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
+                <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
+                <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
+
+                </el-table-column>
+                <el-table-column align="center" v-for="(item,i) in this.dFiledList" :label="item">
+                  <template slot-scope="scope">
+                    {{formatDataMethod(scope.row.energyData,i)}}
+                  </template>
+                </el-table-column>
+                <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+
+                </el-table-column>
+              </el-table>
+            </el-row>
+
+          </el-tab-pane>
+          <el-tab-pane label="年分析" name="年分析">
+            <el-row :gutter="10" class="mb8">
+              <el-col :span="1.5">
+                <el-button
+                  type="warning"
+                  plain
+                  icon="el-icon-download"
+                  size="mini"
+                  @click="handleExport"
+                  v-hasPermi="['analysis:energyYear:export']"
+                >导出</el-button>
+              </el-col>
+              <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+            </el-row>
+            <el-row>
+              <el-table  border :data="energyYearList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
+                <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
+                <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
+
+                </el-table-column>
+                <el-table-column align="center" v-for="(item,i) in this.dFiledListYear" :label="item">
+                  <template slot-scope="scope">
+                    {{formatDataMethod(scope.row.energyData,i)}}
+                  </template>
+                </el-table-column>
+                <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
+
+                </el-table-column>
+              </el-table>
+            </el-row>
+
+          </el-tab-pane>
+          <el-row >
+            <!--图表-->
+            <div ref="energyChartMonth" style="height:400px;padding:0"></div>
+
+          </el-row>
+        </el-tabs>
 
 
-          <el-col :span="1.5">
-            <el-button
-              type="warning"
-              plain
-              icon="el-icon-download"
-              size="mini"
-              @click="handleExport"
-              v-hasPermi="['analysis:energyMonth:export']"
-            >导出</el-button>
-          </el-col>
-          <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-        </el-row>
-        <el-row>
-          <el-table  border :data="energyMonthList" :row-key="getRowKeys" @selection-change="handleSelectionChange">
-            <!-- <el-table-column type="selection" reserve-selection="true" width="55" align="center" />-->
-            <el-table-column fixed label="线路名称" align="center" prop="devName" width="155">
-
-            </el-table-column>
-            <el-table-column align="center" v-for="(item,i) in this.dFiledList" :label="item">
-              <template slot-scope="scope">
-                {{formatDataMethod(scope.row.energyData,i)}}
-              </template>
-            </el-table-column>
-            <el-table-column label="总计" prop="totalEnergy" align="center" class-name="small-padding fixed-width">
-
-            </el-table-column>
-          </el-table>
-        </el-row>
-        <el-row >
-          <!--图表-->
-          <div ref="energyChart" style="height:500px;padding:0"></div>
-
-        </el-row>
-     <!--<pagination
-          v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageNum"
-          :limit.sync="queryParams.pageSize"
-          @pagination="getList"
-        />-->
       </el-col>
     </el-row>
 
@@ -116,6 +131,7 @@
 
 <script>
 import { compareEnergyMonth, getEnergyMonth, delEnergyMonth, addEnergyMonth, updateEnergyMonth } from "@/api/analysis/energyMonth";
+import {compareEnergyYear,listEnergyYea} from  "@/api/analysis/energyYear"
 import {listDevTree,listDept } from "@/api/system/dept";
 import * as echarts from 'echarts';
 export default {
@@ -159,12 +175,14 @@ export default {
 
         }
         },
+      tabName:"月分析",
       // 图表集合
-      chart: null,
+      chartMonth: null,
       //区域列表数据
       areaList: [],
       //动态列表
       dFiledList:[],
+      dFiledListYear:[],
       //echarts x坐标
       echartsX:[],
       //选择月的最大天数
@@ -219,6 +237,7 @@ export default {
       total: 0,
       // powerEnergy analysis in month表格数据
       energyMonthList: [],
+      energyYearList:[],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -270,18 +289,32 @@ export default {
     this.initalEchart();
   },
   methods: {
+    /*
+   * 当切换月电能表和年电能表切换时，更改表头
+   * */
+    tabClick(){
+      if(this.tabName==="月分析"){
+        console.log("this is 月分析");
+      }
+      else {
+        console.log("this is 年分析");
+      }
+    },
 /*初始化echarts*/
    initalEchart(){
-   this.chart=echarts.init(this.$refs.energyChart,'macarons');
-     this.chart.setOption({
-       title: { text: '在Vue中使用echarts' },
+   this.chartMonth=echarts.init(this.$refs.energyChartMonth,'macarons');
+     this.chartMonth.setOption({
+       title: { text: '电能分析' },
        tooltip: {},
        xAxis: {
          data: this.echartsX
        },
+       legend: {
+         data: ['电量']
+       },
        yAxis: {},
        series: [{
-         name: '销量',
+         name: '电量',
          type: 'bar',
          data: [5, 20, 36, 10, 10, 20]
        }]
@@ -323,6 +356,8 @@ export default {
     },
     //动态表头的生成
     getDymaticFieldList(){
+      this.dFiledList=[];
+      this.echartsX=[];
       console.log("this selectMonMaxdays is:"+this.selectMonMaxDays);
       for(let i=0;i<this.selectMonMaxDays;i++){
         this.dFiledList[i]=(i+1)+"日";
@@ -331,35 +366,71 @@ export default {
         else
           this.echartsX[i]="";
       }
-      //console.log(this.dFiledList);
+      for(let i=0;i<12;i++){
+        this.dFiledListYear[i]=(i+1)+"月";
+      }
     },
     //根据获取的电能报表设置柱状图
     resetEcharts(energyMonthList){
       let listLength=energyMonthList.length;
       let routeNameList=[];
       let series=[];
-      let option;
+      let legendNames=[];
+      let color = ['#1890FF', '#91CB74', '#FAC858', '#EE6666', '#73C0DE', '#3CA272', '#FC8452', '#9A60B4', '#ea7ccc'];
 
       if(listLength>0){
         if(listLength>8)
           listLength=8;
         for(let i=0;i<listLength;i++){
-           series[i].name=energyMonthList[i].devName;
-           series[i].type="bar";
-           series[i].data=energyMonthList[i].energyData;
+          var data={};
+          data.name=energyMonthList[i].devName;
+          legendNames.push(data.name);
+          data.type="bar";
+          data.data=energyMonthList[i].energyData;
+          data.color=i > 9 ? color[0] : color[i];
+          series.push(data);
         }
         //x坐标
-        routeNameList=this.dFiledList;
-        let option={
+        if(this.tabName=="月分析")
+         routeNameList=this.dFiledList;
+        else
+         routeNameList=this.dFiledListYear;
+        console.log("routeNameList is:"+routeNameList);
+        var option={
+          title: {
+            left: 'left',
+            text:  '单位 Kwh  ' ,
+            textStyle: {
+              fontSize: 14,
+            }
+          },
+          grid: {
+            top: '40px',
+            left: '20px',
+            right: '20px',
+            bottom: '10px',
+            containLabel: true
+          },
 
+          legend: {
+            data: legendNames
+          },
           xAxis: {
-            data: routeNameList
+            //type: 'time',
+            data: routeNameList,
+            splitLine: {
+              show: false
+            },
+           // type: 'category',
+           /* axisTick: {
+              alignWithLabel: true
+            },*/
           },
           yAxis: {},
           series: series
         }
-        this.chart=echarts.init(this.$refs.energyChart,'macarons');
-        this.chart.setOption(option);
+        //this.chart=echarts.init(this.$refs.energyChart);
+        this.chartMonth.setOption(option);
       }
     },
     /*获取yyyy-mm格式时间*/
@@ -368,8 +439,8 @@ export default {
 
       //获取选择月的最大天数
       this.getMonthMaxDays(selectTime);
-      console.log(this.selectMonMaxDays);
-      //this.queryParams.collectTime=data;
+
+
 
     },
     /*获取设备树内容*/
@@ -395,17 +466,37 @@ export default {
 
       this.loading = true;
       if(selectDevs.length===0){
-        alert("请选择设备");
+        this.$modal.msgError("请选择设备");
+        return;
+      }
+      if(selectDevs.length>8){
+        this.$modal.msgError("选择的设备数量请小于8");
         return;
       }
       let searchParams=this.setParams(this.queryParams,selectDevs);
-      compareEnergyMonth(searchParams).then(response => {
-        this.energyMonthList = response.rows;
-        this.total = response.total;
-        this.resetEcharts(this.energyMonthList);
-        this.loading = false;
-        console.log("this.total is :"+this.total);
-      });
+      if(this.tabName=="月分析"){
+        compareEnergyMonth(searchParams).then(response => {
+          this.getDymaticFieldList();
+
+          this.energyMonthList = response.rows;
+          this.total = response.total;
+          this.resetEcharts(this.energyMonthList);
+          this.loading = false;
+          console.log("this.total is :"+this.total);
+        });
+      }
+      else {
+        compareEnergyYear(searchParams).then(response => {
+          this.getDymaticFieldList();
+
+          this.energyYearList = response.rows;
+          this.total = response.total;
+          this.resetEcharts(this.energyYearList);
+          this.loading = false;
+
+        });
+      }
+
     },
     //获取查询的时间，还有选择的设备
     setParams(params,selectDevs){

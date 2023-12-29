@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.ruoyi.common.core.domain.entity.SysRole;
@@ -25,6 +26,30 @@ public class DeviceServiceImpl implements IDeviceService
 {
     @Autowired
     private DeviceMapper deviceMapper;
+/*
+* 更加区域号查找设备
+* departId用户所在区域号
+* */
+    @Override
+    public List<Device> getDevicesByDepartId(Long departId) {
+        List<Device>devices=new ArrayList<>();
+
+        SysUser usr= getLoginUser().getUser();
+        List<SysRole> roles=usr.getRoles();
+        List<Integer> devIds=new ArrayList<>();
+
+        //如果只有一个角色，role_key是common 并且查询的区域不是所在区域返回null
+        if(roles!=null && roles.size()==1) {
+            if (roles.get(0).getRoleKey().equals("common")&&(!usr.getDeptId().equals(departId))) {
+
+                return devices;
+            }
+        }
+        Device device=new Device();
+        device.setDeptId(departId);
+        devices=deviceMapper.selectDeviceList(device);
+        return devices;
+    }
 
     /**
      * 查询电力监控

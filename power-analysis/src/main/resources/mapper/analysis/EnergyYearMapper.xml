@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.analysis.mapper.EnergyYearMapper">
+
+    <resultMap type="EnergyYear" id="EnergyYearResult">
+        <result property="devName"    column="dev_name"    />
+        <result property="devId"    column="dev_id"    />
+        <result property="epp2"    column="epp2"    />
+        <result property="collectTime"    column="collect_time"    />
+    </resultMap>
+
+    <sql id="selectEnergyYearVo">
+        select id, dev_id, epp2, collect_time from energy_year
+    </sql>
+
+    <select id="selectEnergyYearList" parameterType="EnergyYear" resultMap="EnergyYearResult">
+        select e.dev_id, e.epp2, e.collect_time,d.dev_name from energy_year e
+        left join device d on d.dev_id=e.dev_id
+        <where>
+            <if test="devId != null "> and e.dev_id = #{devId}</if>
+            <if test="epp2 != null "> and e.epp2 = #{epp2}</if>
+            <if test="params.beginTime != null "><!-- 开始时间检索 -->
+                AND date_format(e.collect_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null "><!-- 结束时间检索 -->
+                AND date_format(e.collect_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+        </where> order by collect_time asc
+
+    </select>
+
+    <select id="selectEnergyYearById" parameterType="Long" resultMap="EnergyYearResult">
+        <include refid="selectEnergyYearVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertEnergyYear" parameterType="EnergyYear" useGeneratedKeys="true" keyProperty="id">
+        insert into energy_year
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="devId != null">dev_id,</if>
+            <if test="epp2 != null">epp2,</if>
+            <if test="collectTime != null">collect_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="devId != null">#{devId},</if>
+            <if test="epp2 != null">#{epp2},</if>
+            <if test="collectTime != null">#{collectTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateEnergyYear" parameterType="EnergyYear">
+        update energy_year
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="devId != null">dev_id = #{devId},</if>
+            <if test="epp2 != null">epp2 = #{epp2},</if>
+            <if test="collectTime != null">collect_time = #{collectTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteEnergyYearById" parameterType="Long">
+        delete from energy_year where id = #{id}
+    </delete>
+
+    <delete id="deleteEnergyYearByIds" parameterType="String">
+        delete from energy_year where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

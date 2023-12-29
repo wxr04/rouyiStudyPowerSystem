@@ -58,6 +58,16 @@
             <groupId>com.ruoyi</groupId>
             <artifactId>ruoyi-system</artifactId>
         </dependency>
+        <!-- SpringBoot Websocket -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-websocket</artifactId>
+            <version>5.3.20</version>
+        </dependency>
 
     </dependencies>
 
