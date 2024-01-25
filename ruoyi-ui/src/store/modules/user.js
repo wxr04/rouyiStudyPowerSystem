@@ -7,7 +7,8 @@ const user = {
     name: '',
     avatar: '',
     roles: [],
-    permissions: []
+    permissions: [],
+    messageNotRead:0
   },
 
   mutations: {
@@ -25,6 +26,9 @@ const user = {
     },
     SET_PERMISSIONS: (state, permissions) => {
       state.permissions = permissions
+    },
+    SET_MESNOTREAD: (state, messageNotRead) => {
+      state.messageNotRead=messageNotRead;
     }
   },
 
@@ -55,6 +59,8 @@ const user = {
           if (res.roles && res.roles.length > 0) { // 验证返回的roles是否是一个非空数组
             commit('SET_ROLES', res.roles)
             commit('SET_PERMISSIONS', res.permissions)
+            commit('SET_MESNOTREAD',res.messageNotRead)
+            console.log("state.messageNotRead:"+state.messageNotRead)
           } else {
             commit('SET_ROLES', ['ROLE_DEFAULT'])
           }
@@ -74,6 +80,7 @@ const user = {
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])
           commit('SET_PERMISSIONS', [])
+          commit('SET_MESNOTREAD', 0)
           removeToken()
           resolve()
         }).catch(error => {

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.alarm.mapper.AlarmMapper">
+
+    <resultMap type="Alarm" id="AlarmResult">
+        <result property="id"    column="message_id"    />
+        <result property="TagName"    column="TagName"    />
+        <result property="LimitValue"    column="LimitValue"    />
+        <result property="AlarmType"    column="AlarmType"    />
+        <result property="AlarmTimeT"    column="AlarmTimeT"    />
+        <result property="AlarmTimeMs"    column="AlarmTimeMs"    />
+        <result property="ResumeValue"    column="ResumeValue"    />
+        <result property="AlarmText"    column="AlarmText"    />
+        <result property="ExtendField1"    column="ExtendField1"    />
+        <result    property="userId"       column="user_id"      />
+        <result property="devId"       column="dev_id"      />
+        <result property="devName"       column="dev_name"      />
+        <result    property="isRead"       column="isRead"      />
+        <result property="deptId"       column="dept_id"      />
+       <!-- <result property="ExtendField2"    column="ExtendField2"    />-->
+    </resultMap>
+
+    <sql id="selectAlarmVo">
+        select id, IOServerName, MachineName, TagName, TagComment, GroupName, AlarmValue, AlarmValueDataType, LimitValue, LimitValueDataType, AlarmType, Pri, Quality, AlarmTime, AlarmTimeMs, EventTime, EventTimeMs, OperatorName, OperatorDomain, ResumeValue, ResumeValueDataType, EventType, AlarmText, ExtendField1, ExtendField2 from alarm
+    </sql>
+
+    <!--<select id="selectAlarmList" parameterType="Alarm" resultMap="AlarmResult">
+        select a.id, a.TagName,  a.AlarmValue,  DATE_ADD(a.AlarmTime,INTERVAL 8 HOUR) as AlarmTime,  a.ResumeValue, a.AlarmText,
+        r.dev_id,d.dev_name,r.isRead
+        from alarm a
+        left join alarm_isRead r on a.id=r.message_id
+        left join device d on d.dev_id=r.dev_id
+
+        <where>
+            <if test="params.beginTime != null and params.beginTime != ''">&lt;!&ndash; 开始时间检索 &ndash;&gt;
+                AND date_format(a.AlarmTime,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">&lt;!&ndash; 结束时间检索 &ndash;&gt;
+                AND date_format(u.AlarmTime,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+            <if test="isRead != null "> and r.isRead = #{isRead}</if>
+            <if test="deptId != null  and deptId != ''"> and d.dept_id = #{deptId}</if>
+            <if test="devName != null  and devName != ''"> and d.dev_name = #{devName}</if>
+            <if test="ExtendField1 != null  and ExtendField1 != ''"> and a.ExtendField1 = #{ExtendField1}</if>
+        </where>
+    </select>
+-->
+    <select id="selectAlarmList" parameterType="Alarm" resultMap="AlarmResult">
+        select a.id, a.TagName,  a.AlarmValue,  DATE_ADD(a.AlarmTime,INTERVAL 8 HOUR) as AlarmTimeT,  a.ResumeValue, a.AlarmText,
+        a.LimitValue,r.dev_id,d.dev_name,r.isRead from alarm_isRead r
+        left join alarm a on a.id=r.message_id
+        left join device d on d.dev_id=r.dev_id
+
+        <where>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                AND date_format(a.AlarmTime,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                AND date_format(a.AlarmTime,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+            <if test="isRead != null "> and r.isRead = #{isRead}</if>
+            <if test="deptId != null  and deptId != ''"> and d.dept_id = #{deptId}</if>
+            <if test="devName != null  and devName != ''"> and d.dev_name = #{devName}</if>
+            <if test="ExtendField1 != null  and ExtendField1 != ''"> and a.ExtendField1 = #{ExtendField1}</if>
+        </where>
+        order by a.AlarmTime ASC
+    </select>
+
+    <select id="selectAlarmById" parameterType="Long" resultMap="AlarmResult">
+        <include refid="selectAlarmVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAlarm" parameterType="Alarm" useGeneratedKeys="true" keyProperty="id">
+        insert into alarm
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="IOServerName != null">IOServerName,</if>
+            <if test="MachineName != null">MachineName,</if>
+            <if test="TagName != null">TagName,</if>
+            <if test="TagComment != null">TagComment,</if>
+            <if test="GroupName != null">GroupName,</if>
+            <if test="AlarmValue != null">AlarmValue,</if>
+            <if test="AlarmValueDataType != null">AlarmValueDataType,</if>
+            <if test="LimitValue != null">LimitValue,</if>
+            <if test="LimitValueDataType != null">LimitValueDataType,</if>
+            <if test="AlarmType != null">AlarmType,</if>
+            <if test="Pri != null">Pri,</if>
+            <if test="Quality != null">Quality,</if>
+            <if test="AlarmTime != null">AlarmTime,</if>
+            <if test="AlarmTimeMs != null">AlarmTimeMs,</if>
+            <if test="EventTime != null">EventTime,</if>
+            <if test="EventTimeMs != null">EventTimeMs,</if>
+            <if test="OperatorName != null">OperatorName,</if>
+            <if test="OperatorDomain != null">OperatorDomain,</if>
+            <if test="ResumeValue != null">ResumeValue,</if>
+            <if test="ResumeValueDataType != null">ResumeValueDataType,</if>
+            <if test="EventType != null">EventType,</if>
+            <if test="AlarmText != null">AlarmText,</if>
+            <if test="ExtendField1 != null">ExtendField1,</if>
+            <if test="ExtendField2 != null">ExtendField2,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="IOServerName != null">#{IOServerName},</if>
+            <if test="MachineName != null">#{MachineName},</if>
+            <if test="TagName != null">#{TagName},</if>
+            <if test="TagComment != null">#{TagComment},</if>
+            <if test="GroupName != null">#{GroupName},</if>
+            <if test="AlarmValue != null">#{AlarmValue},</if>
+            <if test="AlarmValueDataType != null">#{AlarmValueDataType},</if>
+            <if test="LimitValue != null">#{LimitValue},</if>
+            <if test="LimitValueDataType != null">#{LimitValueDataType},</if>
+            <if test="AlarmType != null">#{AlarmType},</if>
+            <if test="Pri != null">#{Pri},</if>
+            <if test="Quality != null">#{Quality},</if>
+            <if test="AlarmTime != null">#{AlarmTime},</if>
+            <if test="AlarmTimeMs != null">#{AlarmTimeMs},</if>
+            <if test="EventTime != null">#{EventTime},</if>
+            <if test="EventTimeMs != null">#{EventTimeMs},</if>
+            <if test="OperatorName != null">#{OperatorName},</if>
+            <if test="OperatorDomain != null">#{OperatorDomain},</if>
+            <if test="ResumeValue != null">#{ResumeValue},</if>
+            <if test="ResumeValueDataType != null">#{ResumeValueDataType},</if>
+            <if test="EventType != null">#{EventType},</if>
+            <if test="AlarmText != null">#{AlarmText},</if>
+            <if test="ExtendField1 != null">#{ExtendField1},</if>
+            <if test="ExtendField2 != null">#{ExtendField2},</if>
+         </trim>
+    </insert>
+
+    <update id="updateAlarm" parameterType="Alarm">
+        update alarm
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="IOServerName != null">IOServerName = #{IOServerName},</if>
+            <if test="MachineName != null">MachineName = #{MachineName},</if>
+            <if test="TagName != null">TagName = #{TagName},</if>
+            <if test="TagComment != null">TagComment = #{TagComment},</if>
+            <if test="GroupName != null">GroupName = #{GroupName},</if>
+            <if test="AlarmValue != null">AlarmValue = #{AlarmValue},</if>
+            <if test="AlarmValueDataType != null">AlarmValueDataType = #{AlarmValueDataType},</if>
+            <if test="LimitValue != null">LimitValue = #{LimitValue},</if>
+            <if test="LimitValueDataType != null">LimitValueDataType = #{LimitValueDataType},</if>
+            <if test="AlarmType != null">AlarmType = #{AlarmType},</if>
+            <if test="Pri != null">Pri = #{Pri},</if>
+            <if test="Quality != null">Quality = #{Quality},</if>
+            <if test="AlarmTime != null">AlarmTime = #{AlarmTime},</if>
+            <if test="AlarmTimeMs != null">AlarmTimeMs = #{AlarmTimeMs},</if>
+            <if test="EventTime != null">EventTime = #{EventTime},</if>
+            <if test="EventTimeMs != null">EventTimeMs = #{EventTimeMs},</if>
+            <if test="OperatorName != null">OperatorName = #{OperatorName},</if>
+            <if test="OperatorDomain != null">OperatorDomain = #{OperatorDomain},</if>
+            <if test="ResumeValue != null">ResumeValue = #{ResumeValue},</if>
+            <if test="ResumeValueDataType != null">ResumeValueDataType = #{ResumeValueDataType},</if>
+            <if test="EventType != null">EventType = #{EventType},</if>
+            <if test="AlarmText != null">AlarmText = #{AlarmText},</if>
+            <if test="ExtendField1 != null">ExtendField1 = #{ExtendField1},</if>
+            <if test="ExtendField2 != null">ExtendField2 = #{ExtendField2},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAlarmById" parameterType="Long">
+        delete from alarm where id = #{id}
+    </delete>
+
+    <delete id="deleteAlarmByIds" parameterType="String">
+        delete from alarm where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

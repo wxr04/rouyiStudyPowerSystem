@@ -3,6 +3,8 @@ package com.ruoyi.web.controller.system;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
+
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,6 +55,7 @@ public class SysUserController extends BaseController
     @Autowired
     private ISysPostService postService;
 
+
     /**
      * 获取用户列表
      */
@@ -66,6 +69,7 @@ public class SysUserController extends BaseController
         user.setRoleId(loginUser.getRoleId());
         List<SysUser> list = userService.selectUserList(user);
         return getDataTable(list);
+
     }
 
     @Log(title = "用户管理", businessType = BusinessType.EXPORT)

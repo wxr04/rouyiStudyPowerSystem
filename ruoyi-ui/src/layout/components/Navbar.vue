@@ -7,11 +7,12 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
+
+        <notice-alarm id="notice-alarm" :message="0" class="right-menu-item hover-effect"/>
         <search id="header-search" class="right-menu-item" />
-        
-        <el-tooltip content="源码地址" effect="dark" placement="bottom">
+       <!-- <el-tooltip content="源码地址" effect="dark" placement="bottom">
           <ruo-yi-git id="ruoyi-git" class="right-menu-item hover-effect" />
-        </el-tooltip>
+        </el-tooltip>-->
 
         <el-tooltip content="文档地址" effect="dark" placement="bottom">
           <ruo-yi-doc id="ruoyi-doc" class="right-menu-item hover-effect" />
@@ -56,9 +57,12 @@ import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
 import RuoYiGit from '@/components/RuoYi/Git'
 import RuoYiDoc from '@/components/RuoYi/Doc'
+//import NoticeAlarm from '@/components/NoticeAlarm'
+import NoticeAlarm from "@/components/NoticeAlarm/index"
 
 export default {
   components: {
+
     Breadcrumb,
     TopNav,
     Hamburger,
@@ -66,7 +70,8 @@ export default {
     SizeSelect,
     Search,
     RuoYiGit,
-    RuoYiDoc
+    RuoYiDoc,
+    NoticeAlarm
   },
   computed: {
     ...mapGetters([
@@ -171,7 +176,24 @@ export default {
         }
       }
     }
+    .right-menu-item2 {
+      display: inline-block;
+      padding: 0 8px;
+      height: 100%;
+      width: 20%;
+      font-size: 18px;
+      color: #5a5e66;
+      vertical-align: text-bottom;
 
+      &.hover-effect {
+        cursor: pointer;
+        transition: background .3s;
+
+        &:hover {
+          background: rgba(0, 0, 0, .025)
+        }
+      }
+    }
     .avatar-container {
       margin-right: 30px;
 
